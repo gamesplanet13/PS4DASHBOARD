@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>PS4 Games Pro Dashboard</title>
+  <title>PS4 Games Live Dashboard</title>
 
   <style>
     body {
@@ -9,7 +9,6 @@
       background: #0d1117;
       color: white;
       margin: 0;
-      padding: 0;
     }
 
     header {
@@ -17,7 +16,6 @@
       padding: 15px;
       text-align: center;
       font-size: 22px;
-      font-weight: bold;
     }
 
     .controls {
@@ -53,20 +51,18 @@
       padding: 10px;
       margin: 10px;
       width: 250px;
-      box-shadow: 0 0 10px #000;
     }
 
     .price {
       color: #00ff99;
       font-size: 18px;
-      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
 
-<header>🎮 PS4 Games Pro Dashboard</header>
+<header>🎮 PS4 Games Live Dashboard</header>
 
 <div class="controls">
   <input type="text" id="search" placeholder="Search game...">
@@ -78,15 +74,31 @@
 <script>
 let allGames = [];
 
+async function fetchAmazon() {
+  const proxies = [
+    "https://api.allorigins.win/raw?url=",
+    "https://thingproxy.freeboard.io/fetch/"
+  ];
+
+  for (let proxy of proxies) {
+    try {
+      const res = await fetch(proxy + encodeURIComponent("https://www.amazon.in/s?k=ps4+games"));
+      const html = await res.text();
+
+      if (html.includes("a-size-medium")) {
+        return html;
+      }
+    } catch (e) {}
+  }
+
+  throw new Error("All proxies failed");
+}
+
 async function loadGames() {
   document.getElementById("games").innerHTML = "Loading...";
 
-  const proxy = "https://api.allorigins.win/raw?url=";
-  const url = encodeURIComponent("https://www.amazon.in/s?k=ps4+games");
-
   try {
-    const res = await fetch(proxy + url);
-    const html = await res.text();
+    const html = await fetchAmazon();
 
     const regex = /<span class="a-size-medium.*?">(.*?)<\/span>.*?₹([\d,]+)/gs;
 
@@ -103,7 +115,8 @@ async function loadGames() {
     displayGames(allGames);
 
   } catch (err) {
-    document.getElementById("games").innerHTML = "Error loading data";
+    document.getElementById("games").innerHTML =
+      "❌ Amazon blocked. Click refresh or try later.";
   }
 }
 
@@ -124,11 +137,7 @@ function displayGames(games) {
 
 document.getElementById("search").addEventListener("input", function() {
   const value = this.value.toLowerCase();
-
-  const filtered = allGames.filter(g =>
-    g.name.toLowerCase().includes(value)
-  );
-
+  const filtered = allGames.filter(g => g.name.toLowerCase().includes(value));
   displayGames(filtered);
 });
 
