@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PS4 Games Pro Dashboard</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0d1117;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #161b22;
+      padding: 15px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .controls {
+      text-align: center;
+      padding: 10px;
+    }
+
+    input {
+      padding: 8px;
+      width: 60%;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      padding: 8px 15px;
+      background: #238636;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      background: #161b22;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px;
+      width: 250px;
+      box-shadow: 0 0 10px #000;
+    }
+
+    .price {
+      color: #00ff99;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>🎮 PS4 Games Pro Dashboard</header>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search game...">
+  <button onclick="loadGames()">🔄 Refresh</button>
+</div>
+
+<div class="container" id="games">Loading...</div>
+
+<script>
+let allGames = [];
+
+async function loadGames() {
+  document.getElementById("games").innerHTML = "Loading...";
+
+  const proxy = "https://api.allorigins.win/raw?url=";
+  const url = encodeURIComponent("https://www.amazon.in/s?k=ps4+games");
+
+  try {
+    const res = await fetch(proxy + url);
+    const html = await res.text();
+
+    const regex = /<span class="a-size-medium.*?">(.*?)<\/span>.*?₹([\d,]+)/gs;
+
+    let match;
+    allGames = [];
+
+    while ((match = regex.exec(html)) !== null) {
+      allGames.push({
+        name: match[1],
+        price: match[2]
+      });
+    }
+
+    displayGames(allGames);
+
+  } catch (err) {
+    document.getElementById("games").innerHTML = "Error loading data";
+  }
+}
+
+function displayGames(games) {
+  let output = "";
+
+  games.forEach(game => {
+    output += `
+      <div class="card">
+        <h3>${game.name}</h3>
+        <p class="price">₹${game.price}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("games").innerHTML = output || "No data found";
+}
+
+document.getElementById("search").addEventListener("input", function() {
+  const value = this.value.toLowerCase();
+
+  const filtered = allGames.filter(g =>
+    g.name.toLowerCase().includes(value)
+  );
+
+  displayGames(filtered);
+});
+
+loadGames();
+</script>
+
+</body>
+</html>
